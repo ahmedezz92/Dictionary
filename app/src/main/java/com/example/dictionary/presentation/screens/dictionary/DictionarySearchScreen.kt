@@ -4,11 +4,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -24,6 +27,7 @@ import com.example.dictionary.presentation.components.states.ErrorState
 import com.example.dictionary.presentation.components.states.LoadingState
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DictionarySearchScreen(
     dictionaryViewModel: DictionaryViewModel,
@@ -32,6 +36,8 @@ fun DictionarySearchScreen(
     val searchHistory by dictionaryViewModel.searchHistory.collectAsState()
     val searchText by dictionaryViewModel.searchText.collectAsState()
 
+    val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    var showBottomSheet by rememberSaveable { mutableStateOf(false) }
     Column(
         modifier = Modifier
             .padding()
@@ -42,56 +48,52 @@ fun DictionarySearchScreen(
         SearchBar(
             onSearch = { word ->
                 if (word.isNotEmpty())
-                    dictionaryViewModel.searchCharacters(word)
+                    dictionaryViewModel.searchQuery(word)
                 else if (word.isEmpty())
                     dictionaryViewModel.showEmptyState()
             }, modifier = Modifier.padding(),
-            showSearchHistoryList = { show ->
-                if (show)
-                    dictionaryViewModel.getSearchHistory()
-                else
-                    dictionaryViewModel.hideSearchHistory()
-            },
             searchText = searchText,
             onSearchTextChange = { text ->
                 dictionaryViewModel.updateSearchText(text)
-            }
-
+            },
+            onToggleBottomSheet = { showBottomSheet = true }
         )
 
         when (val state = currentState) {
-            is GetWordDefinitionState.Empty -> {
-                EmptyState(error = stringResource(id = R.string.label_empty_result))
-            }
+            is GetWordDefinitionState.Empty -> EmptyState(error = stringResource(id = R.string.label_empty_result))
 
-            is GetWordDefinitionState.IsLoading -> {
+            is GetWordDefinitionState.IsLoading ->
                 LoadingState()
-            }
 
-            is GetWordDefinitionState.Error -> {
+            is GetWordDefinitionState.Error ->
                 ErrorState(error = state.message)
-            }
 
-            is GetWordDefinitionState.Success -> {
+
+            is GetWordDefinitionState.Success ->
                 SearchResult(state.data)
-            }
 
-            is GetWordDefinitionState.NoConnection -> {
+
+            is GetWordDefinitionState.NoConnection ->
                 EmptyState(error = stringResource(id = R.string.label_check_connection))
-            }
-
-            is GetWordDefinitionState.IsSearching -> {
-                SearchHistoryList(
-                    history = searchHistory,
-                    onWordClick = { word ->
-                        dictionaryViewModel.hideSearchHistory()
-                        dictionaryViewModel.searchCharacters(word)
-                    },
-
-                    )
-            }
 
             else -> {}
+        }
+    }
+    if (showBottomSheet) {
+        LaunchedEffect(Unit) {
+            dictionaryViewModel.getSearchHistory()
+        }
+        ModalBottomSheet(
+            onDismissRequest = { showBottomSheet = false },
+            sheetState = bottomSheetState
+        ) {
+            SearchHistoryList(
+                history = searchHistory,
+                onWordClick = { word ->
+                    dictionaryViewModel.searchQuery(word)
+                    showBottomSheet = false
+                }
+            )
         }
     }
 }

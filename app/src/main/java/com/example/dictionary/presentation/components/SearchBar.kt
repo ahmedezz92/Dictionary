@@ -3,8 +3,10 @@ package com.example.dictionary.presentation.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
@@ -34,7 +36,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.colorResource
@@ -50,14 +51,13 @@ fun SearchBar(
     searchText: String,
     onSearch: (String) -> Unit,
     modifier: Modifier = Modifier,
-    showSearchHistoryList: (Boolean) -> Unit,
     onSearchTextChange: (String) -> Unit,
+    onToggleBottomSheet: () -> Unit
 ) {
     var word by rememberSaveable { mutableStateOf("") }
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
     var isFocused by remember { mutableStateOf(false) }
-    var isHistoryShowing by rememberSaveable { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
 
     Row(
@@ -102,8 +102,6 @@ fun SearchBar(
                     onSearch(searchText)
                     keyboardController?.hide()
                     focusManager.clearFocus()
-                    isHistoryShowing = false
-                    showSearchHistoryList(false)
                 }
             ),
             leadingIcon = {
@@ -111,12 +109,7 @@ fun SearchBar(
                     onClick = {
                         keyboardController?.hide()
                         focusManager.clearFocus()
-                        isHistoryShowing = !isHistoryShowing
-                        if (isHistoryShowing) {
-                            showSearchHistoryList(true)
-                        } else {
-                            showSearchHistoryList(false)
-                        }
+                        onToggleBottomSheet()
                     },
                     modifier = Modifier
                         .wrapContentSize()
@@ -134,8 +127,6 @@ fun SearchBar(
                 onSearch(searchText)
                 keyboardController?.hide()
                 focusManager.clearFocus()
-                isHistoryShowing = false
-                showSearchHistoryList(false)
             },
             modifier = Modifier
                 .size(40.dp)
@@ -158,24 +149,31 @@ fun SearchBar(
 @Composable
 fun SearchHistoryList(
     history: List<String>,
-    onWordClick: (String) -> Unit
+    onWordClick: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    LazyColumn {
-        items(history) { word ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        onWordClick(word)
-                    }
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(text = word)
-                Icon(
-                    imageVector = Icons.Default.Refresh,
-                    contentDescription = "History item"
-                )
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(300.dp)
+    ) {
+        LazyColumn {
+            items(history) { word ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            onWordClick(word)
+                        }
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(text = word)
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "History item"
+                    )
+                }
             }
         }
     }

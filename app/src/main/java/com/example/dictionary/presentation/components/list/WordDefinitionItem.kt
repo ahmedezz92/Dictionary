@@ -98,13 +98,11 @@ private fun MeaningSection(meaning: Meaning) {
                         text = definition.definition,
                         color = Color.Black
                     )
-                    if (definition.example != null) {
-                        Text(
-                            text = "\"${definition.example}\"",
-                            color = Color.Gray,
-                            modifier = Modifier.padding(top = 8.dp, start = 16.dp)
-                        )
-                    }
+                    Text(
+                        text = "\"${definition.example}\"",
+                        color = Color.Gray,
+                        modifier = Modifier.padding(top = 8.dp, start = 16.dp)
+                    )
                 }
             }
         }

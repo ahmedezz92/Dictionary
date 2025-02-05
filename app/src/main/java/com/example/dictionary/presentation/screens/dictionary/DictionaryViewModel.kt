@@ -22,9 +22,6 @@ class DictionaryViewModel @Inject constructor(
     private val getSearchHistoryUseCase: GetSearchHistoryUseCase,
     private val saveSearchQueryUseCase: SaveSearchQueryUseCase
 ) : ViewModel() {
-
-    private var previousState: GetWordDefinitionState = GetWordDefinitionState.Empty
-
     private val _state =
         MutableStateFlow<GetWordDefinitionState>(GetWordDefinitionState.Init)
     val state: StateFlow<GetWordDefinitionState> =
@@ -35,19 +32,6 @@ class DictionaryViewModel @Inject constructor(
 
     private val _searchText = MutableStateFlow("")
     val searchText: StateFlow<String> = _searchText.asStateFlow()
-
-    fun getSearchHistory() {
-        if (_state.value !is GetWordDefinitionState.IsSearching) {
-            previousState = _state.value
-        }
-        viewModelScope.launch {
-            getSearchHistoryUseCase.execute()
-                .collect { history ->
-                    _searchHistory.value = history
-                    _state.value = GetWordDefinitionState.IsSearching
-                }
-        }
-    }
 
     private fun getDefinition(query: String) {
         viewModelScope.launch {
@@ -81,12 +65,17 @@ class DictionaryViewModel @Inject constructor(
         }
     }
 
-    fun searchCharacters(query: String?) {
-        if (!query.isNullOrEmpty() ) {
-            // Store current state before doing the search
-            if (_state.value !is GetWordDefinitionState.IsSearching) {
-                previousState = _state.value
-            }
+    fun getSearchHistory() {
+        viewModelScope.launch {
+            getSearchHistoryUseCase.execute()
+                .collect { history ->
+                    _searchHistory.value = history
+                }
+        }
+    }
+
+    fun searchQuery(query: String?) {
+        if (!query.isNullOrEmpty()) {
             getDefinition(query)
             updateSearchText(query)
         }
@@ -101,11 +90,6 @@ class DictionaryViewModel @Inject constructor(
     fun updateSearchText(text: String) {
         _searchText.value = text
     }
-
-    fun hideSearchHistory() {
-        _state.value = previousState
-//        _searchHistory.value = emptyList()
-    }
 }
 
 sealed class GetWordDefinitionState {
@@ -115,5 +99,4 @@ sealed class GetWordDefinitionState {
     data class Error(val message: String) : GetWordDefinitionState()
     object Empty : GetWordDefinitionState()
     object NoConnection : GetWordDefinitionState()
-    object IsSearching : GetWordDefinitionState()
 }
