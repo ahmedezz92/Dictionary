@@ -1,6 +1,7 @@
 package com.example.dictionary.di
 
 import com.example.dictionary.data.core.data.module.NetworkModule
+import com.example.dictionary.data.datasource.local.WordsDefinitionDao
 import com.example.dictionary.data.datasource.remote.DictionaryApi
 import com.example.dictionary.data.repository.DictionaryRepositoryImpl
 import com.example.dictionary.domain.repository.DictionaryRepository
@@ -16,15 +17,16 @@ import javax.inject.Singleton
 object AppModule {
     @Singleton
     @Provides
-    fun provideWeatherApi(retrofit: Retrofit): DictionaryApi {
+    fun provideApi(retrofit: Retrofit): DictionaryApi {
         return retrofit.create(DictionaryApi::class.java)
     }
 
     @Singleton
     @Provides
-    fun provideWeatherRepository(
+    fun provideRepository(
         dictionaryApi: DictionaryApi,
+        dao: WordsDefinitionDao
     ): DictionaryRepository {
-        return DictionaryRepositoryImpl(dictionaryApi)
+        return DictionaryRepositoryImpl(dictionaryApi, dao)
     }
 }

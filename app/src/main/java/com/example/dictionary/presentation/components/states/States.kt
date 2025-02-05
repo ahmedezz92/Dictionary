@@ -1,4 +1,4 @@
-package com.example.dictionaryapplication.presentation.components.states
+package com.example.dictionary.presentation.components.states
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -48,7 +48,7 @@ fun ErrorState(error: String) {
 }
 
 @Composable
-fun EmptyState(empty: String) {
+fun EmptyState(error: String) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -56,7 +56,7 @@ fun EmptyState(empty: String) {
             .padding(50.dp)
     ) {
         Text(
-            text = empty,
+            text = error,
             textAlign = TextAlign.Center,
             color = Color.Red,
             style = MaterialTheme.typography.bodyLarge

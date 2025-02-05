@@ -11,8 +11,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.dictionary.R
-import com.example.dictionary.presentation.screens.characters.CharactersList
-import com.example.dictionaryapplication.presentation.screens.characters.DictionaryViewModel
+import com.example.dictionary.presentation.screens.dictionary.DictionarySearchScreen
+import com.example.dictionary.presentation.screens.dictionary.DictionaryViewModel
 
 @Composable
 fun DictionaryApp(
@@ -29,9 +29,8 @@ fun DictionaryApp(
                 .background(color = colorResource(id = R.color.black))
         ) {
             composable("CharacterList") {
-                CharactersList(
+                DictionarySearchScreen(
                     dictionaryViewModel = dictionaryViewModel,
-                    navController = navController
                 )
             }
         }

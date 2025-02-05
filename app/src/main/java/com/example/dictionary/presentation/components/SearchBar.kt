@@ -1,23 +1,21 @@
 package com.example.dictionary.presentation.components
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -27,55 +25,65 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import com.example.dictionary.R
 
 @Composable
 fun SearchBar(
-    onSearch: (String) -> Unit, modifier: Modifier = Modifier
+    searchText: String,
+    onSearch: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    showSearchHistoryList: (Boolean) -> Unit,
+    onSearchTextChange: (String) -> Unit,
 ) {
     var word by rememberSaveable { mutableStateOf("") }
     val keyboardController = LocalSoftwareKeyboardController.current
-    var isFocused by rememberSaveable { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
+    var isFocused by remember { mutableStateOf(false) }
+    var isHistoryShowing by rememberSaveable { mutableStateOf(false) }
+    val focusRequester = remember { FocusRequester() }
 
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(Color(0xFF2B2B2B)),
+            .background(Color.Gray),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
-
-        ) {
+    ) {
         OutlinedTextField(
-            value = word,
+            value = searchText,
             onValueChange = {
                 word = it
-                if (it.isEmpty()) {
-                    isFocused = false
-                    keyboardController?.hide()
-                } else {
-                    isFocused = true
-                }
+                onSearchTextChange(it)
             },
             modifier = Modifier
                 .weight(1f)
-                .padding(start = 8.dp),
+                .padding(10.dp)
+                .focusRequester(focusRequester)
+                .onFocusChanged {
+                    isFocused = it.isFocused
+                },
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFF2B2B2B),
-                unfocusedBorderColor = Color(0xFF2B2B2B),
-                cursorColor = Color(0xFFECECEC)
+                focusedBorderColor = colorResource(id = R.color.white),
+                unfocusedBorderColor = colorResource(id = R.color.white),
+                cursorColor = Color.Black
             ),
             shape = RoundedCornerShape(16.dp),
             singleLine = true,
@@ -91,134 +99,83 @@ fun SearchBar(
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(
                 onSearch = {
-                    onSearch(word)
+                    onSearch(searchText)
                     keyboardController?.hide()
+                    focusManager.clearFocus()
+                    isHistoryShowing = false
+                    showSearchHistoryList(false)
                 }
-            )
+            ),
+            leadingIcon = {
+                IconButton(
+                    onClick = {
+                        keyboardController?.hide()
+                        focusManager.clearFocus()
+                        isHistoryShowing = !isHistoryShowing
+                        if (isHistoryShowing) {
+                            showSearchHistoryList(true)
+                        } else {
+                            showSearchHistoryList(false)
+                        }
+                    },
+                    modifier = Modifier
+                        .wrapContentSize()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "History item",
+                        tint = Color.White,
+                    )
+                }
+            }
         )
-
-        Spacer(modifier = Modifier.width(16.dp))
-
         IconButton(
             onClick = {
-                onSearch(word)
+                onSearch(searchText)
                 keyboardController?.hide()
+                focusManager.clearFocus()
+                isHistoryShowing = false
+                showSearchHistoryList(false)
             },
             modifier = Modifier
                 .size(40.dp)
                 .background(
-                    color = Color(0xFF2B2B2B),
+                    color = Color.Gray,
                     shape = CircleShape
                 )
+                .padding(4.dp)
         ) {
             Icon(
                 painter = painterResource(id = android.R.drawable.ic_menu_search),
                 contentDescription = "Search",
-                tint = Color.Red,
-                modifier = Modifier.size(20.dp)
+                tint = Color.White,
+                modifier = Modifier.size(30.dp)
             )
         }
     }
 }
 
 @Composable
-fun AnimatedSearchBar(
-    onSearch: (query: String, isCancel: Boolean) -> Unit,
-    modifier: Modifier = Modifier
+fun SearchHistoryList(
+    history: List<String>,
+    onWordClick: (String) -> Unit
 ) {
-    var expanded by rememberSaveable { mutableStateOf(false) }
-    var searchText by rememberSaveable { mutableStateOf("") }
-    val keyboardController = LocalSoftwareKeyboardController.current
-
-    AnimatedContent(
-        targetState = expanded,
-        modifier = modifier
-            .fillMaxWidth()
-            .height(70.dp), label = ""
-    ) { isExpanded ->
-        if (isExpanded) {
+    LazyColumn {
+        items(history) { word ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color.Black)
-                    .padding(horizontal = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .clickable {
+                        onWordClick(word)
+                    }
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                OutlinedTextField(
-                    value = searchText,
-                    onValueChange = { searchText = it },
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(top = 10.dp, bottom = 10.dp, end = 20.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color.White,
-                        unfocusedBorderColor = Color.White,
-                        focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White,
-                        cursorColor = Color(0xFFECECEC)
-                    ),
-                    shape = RoundedCornerShape(5.dp),
-                    singleLine = true,
-                    placeholder = {
-                        Text(
-                            text = stringResource(id = R.string.hint_enter_name),
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = Color.LightGray
-                            ),
-                            fontSize = TextUnit(12f, TextUnitType.Sp)
-                        )
-                    },
-                    textStyle = TextStyle(
-                        Color.DarkGray,
-                        fontSize = TextUnit(12f, TextUnitType.Sp)
-                    ),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(onSearch = {
-                        onSearch(searchText, false)
-                        keyboardController?.hide()
-                    })
+                Text(text = word)
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = "History item"
                 )
-
-                Text(
-                    text = stringResource(id = R.string.label_cancel),
-                    modifier = Modifier.clickable {
-                        expanded = false
-                        searchText = ""
-                        onSearch("", true)
-                        keyboardController?.hide()
-                    },
-                    color = Color.Red
-                )
-            }
-        } else {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.Black)
-                    .padding(horizontal = 8.dp),
-            ) {
-                Image(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .requiredHeight(100.dp),
-                    painter = painterResource(id = R.drawable.ic_launcher_background),
-                    contentDescription = "Marvel Logo"
-                )
-
-                IconButton(
-                    onClick = {
-                        expanded = true
-                    },
-                    modifier = Modifier.align(Alignment.CenterEnd)
-
-                ) {
-                    Icon(
-                        painter = painterResource(id = android.R.drawable.ic_menu_search),
-                        contentDescription = "Search",
-                        tint = Color.Red,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
             }
         }
     }
