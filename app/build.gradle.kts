@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id ("kotlin-kapt")
+    id("kotlin-kapt")
     alias(libs.plugins.hilt)
 }
 
@@ -56,6 +56,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.hilt.android)
+    implementation(libs.androidx.room.common)
     kapt(libs.hilt.compiler)
     kapt("androidx.hilt:hilt-compiler:1.2.0")
 
@@ -81,7 +82,17 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
     // Room
-    implementation("androidx.room:room-runtime:2.6.1")
-    implementation("androidx.room:room-ktx:2.6.1")
-    kapt("androidx.room:room-compiler:2.6.1")
+    implementation("androidx.room:room-runtime:${libs.versions.room}")
+    implementation("androidx.room:room-ktx:${libs.versions.room}")
+    kapt("androidx.room:room-compiler:${libs.versions.room}")
+
+    // For mocking
+    testImplementation("org.mockito:mockito-core:4.11.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:4.0.0")
+
+    // MockK for mocking
+    testImplementation("io.mockk:mockk:1.13.2")
+    testImplementation("androidx.room:room-testing:${libs.versions.room}")
+    testImplementation("androidx.test:core-ktx:${libs.versions.coreKtx}")
+    testImplementation("kotlin.test:kotlin-test")
 }
