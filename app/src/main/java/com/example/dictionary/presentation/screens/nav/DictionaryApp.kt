@@ -23,12 +23,12 @@ fun DictionaryApp(
     ) { padding ->
         NavHost(
             navController = navController,
-            startDestination = "CharacterList",
+            startDestination = "DictionaryScreen",
             modifier = Modifier
                 .padding(padding)
                 .background(color = colorResource(id = R.color.black))
         ) {
-            composable("CharacterList") {
+            composable("DictionaryScreen") {
                 DictionarySearchScreen(
                     dictionaryViewModel = dictionaryViewModel,
                 )
