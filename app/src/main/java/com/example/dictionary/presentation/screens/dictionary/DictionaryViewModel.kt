@@ -33,6 +33,8 @@ class DictionaryViewModel @Inject constructor(
     private val _searchText = MutableStateFlow("")
     val searchText: StateFlow<String> = _searchText.asStateFlow()
 
+    private var lastSearchedQuery: String? = null
+
     private fun getDefinition(query: String) {
         viewModelScope.launch {
             saveSearchQueryUseCase.execute(query)
@@ -75,7 +77,8 @@ class DictionaryViewModel @Inject constructor(
     }
 
     fun searchQuery(query: String?) {
-        if (!query.isNullOrEmpty()) {
+        if (!query.isNullOrEmpty() && query != lastSearchedQuery) {
+            lastSearchedQuery = query
             getDefinition(query)
             updateSearchText(query)
         }
@@ -83,8 +86,8 @@ class DictionaryViewModel @Inject constructor(
 
     fun showEmptyState() {
         _state.value = GetWordDefinitionState.Empty
-        _searchText.value = ""
         updateSearchText("")
+
     }
 
     fun updateSearchText(text: String) {

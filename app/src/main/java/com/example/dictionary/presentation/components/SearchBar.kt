@@ -69,9 +69,10 @@ fun SearchBar(
     ) {
         OutlinedTextField(
             value = searchText,
-            onValueChange = {
-                word = it
-                onSearchTextChange(it)
+            onValueChange = { newText ->
+                if (newText != searchText) { // Only update if the text is different
+                    onSearchTextChange(newText)
+                }
             },
             modifier = Modifier
                 .weight(1f)
