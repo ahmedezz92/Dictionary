@@ -56,6 +56,7 @@ class DictionaryViewModel @Inject constructor(
                         }
 
                         is BaseResult.DataState -> {
+                            lastSearchedQuery = query
                             _searchText.value = query
                             if (result.items!!.isEmpty())
                                 _state.value = GetWordDefinitionState.Empty
@@ -78,7 +79,6 @@ class DictionaryViewModel @Inject constructor(
 
     fun searchQuery(query: String?) {
         if (!query.isNullOrEmpty() && query != lastSearchedQuery) {
-            lastSearchedQuery = query
             getDefinition(query)
             updateSearchText(query)
         }
